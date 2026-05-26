@@ -1,16 +1,11 @@
 /**
- * BARRIER CHECK — proximidade da barreira mais próxima do dia anterior.
+ * BARRIER CHECK — CORE.
  *
- * Port literal de engine/main.js linhas 192-202 (versão dentro de
- * runDayEngine — a versão "pré" das linhas 127-147 é equivalente
- * mas usa contrato diferente; mantemos a versão estruturada {ok,dist}
- * que é a usada efetivamente pelo getSetups dentro do runDayEngine).
- *
- * Comportamento original: barreira NÃO bloqueia entrada — é apenas
- * informação anexada ao setup (decisão do trader).
+ * Port literal de engine/main.js linhas 192-202. Barreira NÃO bloqueia
+ * entrada — é apenas metadata anexada ao Setup.
  */
 
-import type { PrevDay } from "../types";
+import type { PrevDay } from "./types";
 
 export interface BarrierResult {
   ok: boolean;

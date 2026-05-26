@@ -1,17 +1,17 @@
 /**
- * TITAN Trade Checker — Constantes do método (port literal)
+ * TITAN CORE — Constantes do método (parity-locked).
  *
- * Fonte: titan_reconciliation.py + engine/main.js (vanilla).
- * NÃO ALTERAR valores sem revisão estrutural — toda a matemática
- * do método depende desses números.
+ * Port literal de engine/main.js (vanilla) e titan_reconciliation.py.
+ * NÃO ALTERAR valores sem revisão estrutural e atualização do PARITY.md
+ * + golden tests. Toda a matemática do método depende destes números.
  */
 
 import type { StructuralState } from "./types";
 
 // ─────────────────────────────────────────────────────────────────────
-// QUADS — [gatilho_deslocamento, stop_deslocamento]
-// Index 0 = "0/0" (sem quadrado fechado, P1 atingido, runner em BE+50)
-// Index q = N(q)/1: gatilho de fechamento e novo stop após confirmação
+// QUADS — [gatilho_close_delta, novo_stop_delta]
+// Index 0 = "0/0": P1 atingido, nenhum quadrado fechado, runner BE+50.
+// Index q ≥ 1 = "N/1": gatilho de fechamento e novo stop.
 // ─────────────────────────────────────────────────────────────────────
 export const QUADS: ReadonlyArray<readonly [number, number]> = [
   [0, 50],
@@ -28,8 +28,8 @@ export const QUADS: ReadonlyArray<readonly [number, number]> = [
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────
-// STATE_PAYOUT — pontos líquidos por estado estrutural reconciliado
-// Fonte: engine/main.js linhas 13-17 (STATE_PAYOUT) + constants.js (BMAP).
+// STATE_PAYOUT — pontos líquidos por estado estrutural reconciliado.
+// Fonte: engine/main.js linhas 13-17.
 // ─────────────────────────────────────────────────────────────────────
 export const STATE_PAYOUT: Readonly<Record<StructuralState, number>> = {
   STOP: -350,
@@ -52,16 +52,20 @@ export const STATE_PAYOUT: Readonly<Record<StructuralState, number>> = {
 // ─────────────────────────────────────────────────────────────────────
 // Parâmetros operacionais (titan_reconciliation.py)
 // ─────────────────────────────────────────────────────────────────────
-export const TICK_VALUE = 0.2; // R$ por tick por contrato (WIN mini)
-export const TICK_SIZE = 5.0; // 5 pontos = 1 tick
+export const TICK_VALUE = 0.2;
+export const TICK_SIZE = 5.0;
 export const STOP_PONTOS = -350;
 export const P1_PONTOS = 175;
-export const P1_STOP_BE = 50; // Stop movido para BE+50 após P1
-export const N_LEVEL = 350; // Distância de cada nível N
+export const P1_STOP_BE = 50;
+export const N_LEVEL = 350;
+
+// Deltas operacionais usados pelo simulateTrade (espelham QUADS / regra-mãe).
+export const STOP_DESLOC = 350;
+export const P1_TOUCH = 175;
+export const BE_PLUS = 50;
 
 // ─────────────────────────────────────────────────────────────────────
-// Mapeamentos visuais (preservados do constants.js original)
-// Usados pela UI; engine não consome.
+// Mapeamentos visuais — consumidos apenas pela UI; CORE não depende.
 // ─────────────────────────────────────────────────────────────────────
 export const TCLASS: Readonly<Record<string, string>> = {
   Stop: "ts",
@@ -82,8 +86,6 @@ export const TCLASS: Readonly<Record<string, string>> = {
   "Stop + P1": "tsp",
 };
 
-// BMAP — payout do label bruto da planilha (não é autoridade financeira;
-// é apenas o "tipo" como gravado pelo trader, usado para sanity-check de UI).
 export const BMAP: Readonly<Record<string, number>> = {
   Stop: -350,
   P1: 75,
