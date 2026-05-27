@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "entries": [
+    {
+      "path": "canonical/canonical_trade_log.json",
+      "sha256": "179df8df6ec0c2db976c7255f422aa050172d959cea8fe736d53e02f3fe48a10",
+      "bytes": 1346,
+      "kind": "canonical"
+    },
+    {
+      "path": "canonical/canonical_metrics.json",
+      "sha256": "6ec0e92260585cf7deb9450ff205889e08d9649b219a87e6c07c525bc4011925",
+      "bytes": 5258,
+      "kind": "canonical"
+    },
+    {
+      "path": "canonical/canonical_parameters.json",
+      "sha256": "8c8276a342d51b3534780d8c3443e6acaac58766f6428ed5e68c292d49ad56c7",
+      "bytes": 135,
+      "kind": "canonical"
+    },
+    {
+      "path": "canonical/canonical_metadata.json",
+      "sha256": "9de0df7b1f0d2d8d36a01d04e3b2bedf30448e059da3b34bb0c3fb70e0b731a9",
+      "bytes": 385,
+      "kind": "canonical"
+    },
+    {
+      "path": "canonical/raw_trades.sha256",
+      "sha256": "b974867b1cdf92b4470977eb2222508fa706b5a851660626bfdfd2aefa4ed70d",
+      "bytes": 81,
+      "kind": "canonical"
+    },
+    {
+      "path": "market/manifests/datasets.json",
+      "sha256": "61e4d60d6dfe2fcc2dbc071ffac962849ab105c31ebde9aba1c508c4b8f183ff",
+      "bytes": 95,
+      "kind": "market"
+    }
+  ]
+}

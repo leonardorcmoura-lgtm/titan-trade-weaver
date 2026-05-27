@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "metrics": [
+    {
+      "id": "trades_total",
+      "value": 5,
+      "unit": "count",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "count(trades)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "trades_t1",
+      "value": 4,
+      "unit": "count",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "count(trades where slot=T1)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "wins_total",
+      "value": 3,
+      "unit": "count",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "count(trades where state != STOP)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "stops_total",
+      "value": 2,
+      "unit": "count",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "count(trades where state = STOP)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "winrate_total",
+      "value": 0.6,
+      "unit": "%",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "wins_total / trades_total",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "winrate_t1",
+      "value": 0.75,
+      "unit": "%",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "count(t1 where state != STOP) / count(t1)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "payout_sum",
+      "value": -95,
+      "unit": "pts",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "sum(trade.payout)",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    },
+    {
+      "id": "payout_avg",
+      "value": -19,
+      "unit": "pts",
+      "provenance": {
+        "epistemic": "CALC",
+        "formula": "payout_sum / trades_total",
+        "granularity": "trade",
+        "period": {
+          "from": "2024-01-02",
+          "to": "2024-01-05"
+        },
+        "sources": [
+          {
+            "file": "canonical/raw_trades.csv",
+            "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+          }
+        ],
+        "derivedAt": "2026-01-01T00:00:00.000Z",
+        "derivedBy": "scripts/derive-canonical.ts@069e703c787b446d309331ab95e2b651c4d4ddf6"
+      }
+    }
+  ]
+}
