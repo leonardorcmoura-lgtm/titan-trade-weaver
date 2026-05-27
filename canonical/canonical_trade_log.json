@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "source": {
+    "file": "canonical/raw_trades.csv",
+    "sha256": "c74b00e99c234eb18eda9f80a61aadd8de0721c21db7b9da9a90a56f00812f91"
+  },
+  "derivedAt": "2026-01-01T00:00:00.000Z",
+  "count": 5,
+  "trades": [
+    {
+      "id": "T0001",
+      "date": "2024-01-02",
+      "slot": "T1",
+      "dir": 1,
+      "setupType": "C1",
+      "ep": 128500,
+      "state": "2/1",
+      "payout": 270,
+      "note": "bootstrap-fixture"
+    },
+    {
+      "id": "T0002",
+      "date": "2024-01-02",
+      "slot": "T2",
+      "dir": -1,
+      "setupType": "norm",
+      "ep": 128620,
+      "state": "STOP",
+      "payout": -350,
+      "note": "bootstrap-fixture"
+    },
+    {
+      "id": "T0003",
+      "date": "2024-01-03",
+      "slot": "T1",
+      "dir": 1,
+      "setupType": "open",
+      "ep": 129100,
+      "state": "0/0",
+      "payout": 135,
+      "note": "bootstrap-fixture"
+    },
+    {
+      "id": "T0004",
+      "date": "2024-01-04",
+      "slot": "T1",
+      "dir": -1,
+      "setupType": "C1",
+      "ep": 129050,
+      "state": "1/1",
+      "payout": 200,
+      "note": "bootstrap-fixture"
+    },
+    {
+      "id": "T0005",
+      "date": "2024-01-05",
+      "slot": "T1",
+      "dir": 1,
+      "setupType": "norm",
+      "ep": 129300,
+      "state": "STOP",
+      "payout": -350,
+      "note": "bootstrap-fixture"
+    }
+  ]
+}

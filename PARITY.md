@@ -193,3 +193,46 @@ Se for absolutamente necessário alterar comportamento do core:
 - **v2.0.0** (Fase 2) — Lock formal do core. Separação `core/execution/ui`.
   Golden tests + replay infra. P2 movido para execution layer.
 - **v1.0.0** (Fase 1) — Port literal de `engine/main.js` para TypeScript.
+
+---
+
+## 7. Quantitative Authority (Fase 3)
+
+Acima do engine parity-locked, o TITAN opera com **três autoridades
+disjuntas** sobre números. Toda métrica/dado consumido pela UI deve
+declarar a qual delas pertence e por qual pipeline passou.
+
+| Autoridade | Fonte única                       | Epistemic | Localização          |
+|------------|-----------------------------------|-----------|----------------------|
+| CANONICAL  | `canonical/raw_trades.csv`        | OBS/CALC  | `src/canonical/`     |
+| MARKET     | `b3/<symbol>/<gran>/<date>.csv`   | OBS       | `src/market/`        |
+| ENGINE     | `src/core/simulate.ts`            | SIM       | `src/core/`          |
+
+### Regras invioláveis
+
+1. Qualquer leitura de OHLC passa por `@/market/canonicalFeed` —
+   nunca arrays inline, mocks, fetch direto. `tests/market/drift.test.ts`
+   bloqueia regressões.
+2. Qualquer métrica exibida vem de `@/canonical/immutableMetrics`. UI é
+   **visualization-only**: zero cálculo estatístico em componentes.
+3. Todo artefato derivado tem hash registrado em
+   `reproducibility/lockfile.json`. `scripts/verify-integrity.ts` falha
+   o CI em qualquer drift.
+4. Todo `ChartSpec` exige `formula`, `sources`, `granularity`, `period`,
+   `hypothesis`, `interpretation`, `epistemic`. Renderer recusa specs
+   incompletas (`assertChartSpec`).
+5. Reprodutibilidade: `bun scripts/reproduce.ts` apaga derivados e
+   reconstrói tudo byte-a-byte (validado por
+   `tests/market/reproducibility.test.ts`). Determinismo requer
+   `TITAN_FIXED_TS` e `TITAN_GIT_SHA` quando relevantes.
+6. Mudança quantitativa exige: novo hash → reconciliation report em
+   `audit/reports/` → bump em `canonical_metadata.json.version` → CI pass
+   → golden pass.
+
+### Pipeline
+
+```
+raw_trades.csv ──► derive-canonical ──► canonical_*.json ──► immutableMetrics ──► UI
+b3/*.csv       ──► ingest-market    ──► hashes + manifest  ──► canonicalFeed   ──► engine
+                                                                                  └──► [SIM] results
+```
