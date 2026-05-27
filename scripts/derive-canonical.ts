@@ -36,13 +36,10 @@ const VERSION = 1;
 const FIXED_TS = process.env.TITAN_FIXED_TS || new Date().toISOString();
 
 function gitSha(): string | null {
-  try {
-    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] })
-      .toString()
-      .trim();
-  } catch {
-    return null;
-  }
+  // Reproducibility: prefer explicit env. Falling back to live HEAD would
+  // make derived artifacts change on every commit (incl. harness auto-commits).
+  if (process.env.TITAN_GIT_SHA) return process.env.TITAN_GIT_SHA;
+  return null;
 }
 
 function parseRawTrades(): CanonicalTrade[] {
