@@ -1,162 +1,106 @@
-# TITAN — Fase 3: Quantitative Authority Layer
+## Escopo — Fase 1 isolada
 
-Construir a camada institucional **sobre** o core já congelado. Nenhum arquivo em `src/core/`, `src/execution/` ou `tests/golden/` será tocado. Os 8/8 golden tests continuam autoridade comportamental do engine.
+Implementar **apenas o engine puro** do TITAN em TypeScript. Zero React, zero UI, zero data-loading. Saída: módulos puros e determinísticos sob `src/engine/`, prontos para auditoria contra os 9 critérios definidos.
 
----
+Após a entrega, rodamos a auditoria estrutural. Data layer, canvas e UI ficam para rodadas seguintes.
 
-## Princípio governante
-
-Há **três autoridades disjuntas**, em hierarquia estrita:
+## Arquivos a criar
 
 ```text
-CANONICAL (planilha manual)    →  fonte única de métricas REAIS  [OBS]
-MARKET (B3 candles)            →  fonte única de OHLC            [OBS]
-ENGINE (core parity-locked)    →  fonte única de simulações      [SIM]
+src/engine/
+├── constants.ts                  QUADS, STATE_PAYOUT, TCLASS, BMAP, TEXP,
+│                                  TICK_VALUE, TICK_SIZE, STOP_PONTOS,
+│                                  P1_PONTOS, P1_STOP_BE, N_LEVEL
+├── types.ts                      Candle, Setup, TradeResult, DayData,
+│                                  ExecutionEvent, StructuralState,
+│                                  PrevDay, QuadConfirmation
+├── structural/
+│   └── reconciliation.ts         deriveStructuralState(T)
+│                                  deriveFinancialPayout(state)
+│                                  deriveAllowT2(state)
+├── detection/
+│   ├── barrier.ts                checkBarrier(ep, dir, prev)
+│   └── setups.ts                 getSetups(candles, pfd, prev)
+├── execution/
+│   ├── simulate.ts               simulateTrade(setup, candles)
+│   └── events.ts                 deriveExecutionEvents(trade)
+└── dayEngine.ts                  runDayEngine({candles, pfd, prev}) → {t1, t2}
 ```
 
-Qualquer número exibido no app **deve** declarar de qual autoridade veio e por qual pipeline passou. Hardcodes, datasets inline, OHLC literal em estratégia, métrica recalculada em chart = violação.
+## Regras de port (não-negociáveis)
 
----
+1. **Port linha-a-linha** do `main.js` original. Nomes de funções, ordem de checagens, valores de constantes — verbatim.
+2. **Reconciliador é a única autoridade**: nenhum módulo fora de `structural/reconciliation.ts` pode atribuir `structuralState` ou calcular payout. `simulateTrade` chama `deriveStructuralState`/`deriveAllowT2` no final, nunca duplica a lógica.
+3. **3 camadas separadas** no retorno de `simulateTrade`:
+   ```ts
+   {
+     // execution layer (operacional)
+     setup, ep, dir, stop0, p1Hit, p1Time, p2Hit, quadLevel,
+     quadConfirmed, runStop, exitBar, exitPrice, QUADS,
+     executionEvents,        // ExecutionEvent[]
+     // structural layer (reconciliado)
+     structuralState,        // 'STOP'|'0/0'|'1/1'|...|'13/1'
+     allowT2,                // boolean
+     // financial layer (derivado do estrutural)
+     financialResult         // number (pontos líquidos)
+   }
+   ```
+4. **Patch `CF após f`** presente em **ambos** os call sites:
+   - opening CF pair (primeiras 6 barras) — linha equivalente a `main.js:245`
+   - scan geral — linha equivalente a `main.js:284`
+   ```ts
+   if (i > 0 && candles[i-1].isF) continue;
+   ```
+5. **P1 por toque** (`h`/`l` ≥175), **quadrado por fechamento** (`cl`), **runner stop progressivo** via `QUADS[q][1]`. Sem P1 → sem runner, sem quadrado, sem 0/0, sem N/1.
+6. **`getSetups`** preserva integralmente:
+   - C1 (CF na barra 0 com continuidade imediata)
+   - opening pair (2 primeiros CFs em 6 barras, com regras de mesma/oposta direção vs `pfd`)
+   - scan geral
+   - filtros: `bar > 40`, `bar >= 4 && c.cnt > 0` (pausa), VWAP, fibo 50% (`fbmid`)
+   - kill on `f` durante busca de continuidade
+   - substituição/oposição de CF
+7. **Barreira 175pts** via `checkBarrier` retornando `{ok, dist}`, anexada a cada setup mas **não bloqueia** entrada (decisão do trader — comportamento original preservado).
+8. **`runDayEngine`** encadeia t1 → t2 só se `t1.allowT2` e `setup2.cfIdx > afterBar`.
 
-## Estrutura de pastas (nova)
+## Tipagem
 
-```text
-canonical/                     # autoridade da planilha manual
-  raw_trades.csv               # input bruto (commitado)
-  raw_trades.sha256            # hash do input
-  canonical_trade_log.json     # derivado, normalizado
-  canonical_metrics.json       # métricas agregadas
-  canonical_parameters.json    # params usados na derivação
-  canonical_metadata.json      # provenance + timestamps + git sha
+- TS strict, zero `any` no engine.
+- `StructuralState = 'STOP' | '0/0' | '1/1' | '2/1' | ... | '13/1'` como union literal.
+- `ExecutionEvent = { type: 'P1' | 'P2' | 'N1' | ... | 'RUNNER_STOP' | 'STOP_RAW'; bar; pts; label }`.
+- `Candle` reflete exatamente os campos pós-`decode` (`isCF/isF/cfbull/cfbear/fbmax/fbmin/fbmid/fbdir/cnt/lim/bar/bull/o/h/l/cl/vw/t`).
 
-market/
-  manifests/<dataset>.json     # manifesto por dataset
-  signatures/<dataset>.sig     # assinatura HMAC
-  hashes/<dataset>.sha256      # hash do parquet/csv
-  parquet/                     # binários (gitignored, hashes commitados)
+## Determinismo
 
-b3/
-  WINFUT/{1min,5min,daily}/    # CSVs fonte (commitados se pequenos)
+- Todas as funções são **puras** — não leem `window`, `Date.now()`, `Math.random()`, nem state global.
+- Mesma entrada → mesma saída, bit a bit.
+- `simulateTrade` e `getSetups` recebem `candles`/`pfd`/`prev` como argumentos (não dependem de `CDAY` global como o original).
 
-reproducibility/
-  pipeline.json                # DAG declarativo
-  lockfile.json                # hashes esperados de cada artefato derivado
+## O que NÃO entra nesta fase
 
-audit/
-  reports/<timestamp>.json     # reconciliation reports
-  drift/<timestamp>.json       # diffs detectados
+- Nenhum `.tsx`, hook, fetch, `decode()`, canvas, narrativa.
+- Nenhum arquivo em `src/components/`, `src/hooks/`, `src/analytics/`, `src/intrabar/`, `src/data/`, `src/routes/`.
+- Nenhuma alteração em `styles.css` ou `routes/index.tsx`.
 
-scripts/                       # CLIs executáveis via bun
-  derive-canonical.ts          # raw_trades.csv → canonical_*.json
-  ingest-market.ts             # b3/*.csv → market/parquet + hashes
-  verify-integrity.ts          # valida hashes de tudo
-  rebuild-manifesto.ts         # canonical_metrics → manifesto/charts payload
-  reproduce.ts                 # apaga derivados e re-roda pipeline inteiro
+## Critérios de auditoria pós-entrega (referência)
 
-src/
-  canonical/
-    types.ts                   # CanonicalTrade, CanonicalMetric, Provenance
-    loader.ts                  # lê canonical_*.json (read-only, hash-checked)
-    immutableMetrics.ts        # API única que a UI consome
-  market/
-    canonicalFeed.ts           # única forma de obter Candle[]
-    hashGuard.ts               # valida SHA256 antes de servir
-    integrity.ts               # checagens estruturais (OHLC sanity)
-    validator.ts               # schema + range validation
-    reproducibility.ts         # comparação manifest vs realidade
-  audit/
-    epistemic.ts               # tags [OBS][CALC][SIM][INF][APROX]
-    provenance.ts              # rastreio formula+source+granularity+period
-  ui/
-    (apenas consumidores; zero cálculo)
+Imediatamente após implementação, audito contra:
 
-tests/market/
-  integrity.test.ts            # hashes válidos, schema válido
-  parity.test.ts               # derivação determinística (input fixo → output fixo)
-  drift.test.ts                # detecta candles inline / OHLC hardcoded em src/
-  reproducibility.test.ts      # apaga derivados, re-roda, compara byte-a-byte
-```
+1. Separação real das 3 camadas no retorno de `simulateTrade`.
+2. `deriveStructuralState`/`deriveFinancialPayout`/`deriveAllowT2` como únicos pontos de decisão estrutural/financeira.
+3. Zero lógica estrutural fora de `engine/` (trivial nesta fase — só existe engine).
+4. `simulateTrade`: P1 por toque, quadrado por close, runner progressivo, `quadConfirmed`, `p2Hit`, `executionEvents`, reconciliação final.
+5. `getSetups`: bar40, pausa, VWAP, fibo, continuidade, opening pair, C1, kill on `f`, patch `CF-após-f` nos 2 call sites.
+6. Nenhum payout hardcoded fora de `STATE_PAYOUT` / `QUADS`.
+7. Nenhum label estrutural hardcoded fora do reconciliador.
+8. Nenhuma derivação paralela de estado.
+9. Lista de riscos arquiteturais, regressões potenciais, pontos frágeis, acoplamentos remanescentes, funções ainda monolíticas.
 
----
+## Próximos passos depois da Fase 1
 
-## Pipeline canônico (DAG)
+(Fora deste plano — só para contexto.)
+- Fase 2: data layer (`decode`, `loadSession`, hooks).
+- Fase 3: canvas chart.
+- Fase 4: UI/narrativa.
+- Fase 5: tema/tokens.
 
-```text
-raw_trades.csv ──hash──► canonical_trade_log.json
-                              │
-                              ├──► canonical_metrics.json ──► immutableMetrics.ts ──► UI
-                              │                                       │
-                              │                                       └──► manifesto renderer
-                              │                                       └──► chart renderer
-                              └──► canonical_parameters.json
-                              └──► canonical_metadata.json
-
-b3/WINFUT/*.csv ──hash──► market/parquet/*.parquet ──► canonicalFeed.ts ──► engine (SIM)
-                                                                              │
-                                                                              └──► simulation results [SIM]
-```
-
-Cada nó do DAG: declara input hashes, output hash, fórmula, granularidade, período, provenance, epistemic tag.
-
----
-
-## Contrato de métrica (formal)
-
-Toda métrica em `canonical_metrics.json`:
-
-```json
-{
-  "id": "winrate_t1",
-  "value": 0.547,
-  "epistemic": "OBS",
-  "formula": "count(t1.state != 'STOP') / count(t1)",
-  "granularity": "trade",
-  "period": { "from": "2024-01-01", "to": "2024-12-31" },
-  "source": { "file": "raw_trades.csv", "sha256": "..." },
-  "derivedAt": "2026-05-27T...",
-  "derivedBy": "scripts/derive-canonical.ts@<git-sha>"
-}
-```
-
-`immutableMetrics.ts` expõe **apenas** leitura, e valida hash no boot.
-
----
-
-## Lock rules (CI-enforceable)
-
-1. `reproducibility/lockfile.json` lista hashes esperados de cada artefato derivado.
-2. `verify-integrity.ts` compara realidade vs lockfile → exit 1 em drift.
-3. `drift.test.ts` faz grep estático em `src/` por padrões proibidos: literais OHLC, arrays de candle inline, números mágicos em charts.
-4. Mudança quantitativa exige: novo hash → reconciliation report em `audit/reports/` → bump em `canonical_metadata.json.version`.
-
----
-
-## Entregáveis desta fase (ordem)
-
-1. **Estrutura + tipos**: pastas, `canonical/types.ts`, `audit/epistemic.ts`, `audit/provenance.ts`.
-2. **Canonical pipeline**: `scripts/derive-canonical.ts` + `canonical/loader.ts` + `immutableMetrics.ts`. Aceita CSV vazio/placeholder para bootstrap; usuário forneceria `raw_trades.csv` real depois.
-3. **Market authority**: `market/canonicalFeed.ts`, `hashGuard.ts`, `integrity.ts`, `validator.ts`, `reproducibility.ts`. Suporta CSV (parquet fica como hash-only no início — bun não tem parquet nativo barato).
-4. **Reproducibility**: `scripts/reproduce.ts` + `reproducibility/pipeline.json` + `lockfile.json`.
-5. **Audit**: `scripts/verify-integrity.ts`, reconciliation report writer.
-6. **Tests**: `tests/market/{integrity,parity,drift,reproducibility}.test.ts`.
-7. **Manifesto/chart rebuild path**: contratos + renderer-side adapters (sem UI nova ainda — só o contrato `ChartSpec` com explainability obrigatória: formula, source, granularity, period, hypothesis, interpretation).
-8. **PARITY.md update**: adicionar seção "Quantitative Authority" listando as três autoridades e as lock rules.
-
----
-
-## O que **não** entra agora
-
-- Nenhuma página/canvas/replay visual (Fase posterior).
-- Parquet binário real (usar CSV + hash; trocar para parquet quando tivermos `raw_trades.csv` real e datasets grandes).
-- Assinatura criptográfica forte (HMAC com secret local agora; KMS depois).
-- Backtesting/quant analytics propriamente ditos — esta fase só constrói o **chão de autoridade** sobre o qual eles serão construídos.
-
----
-
-## Perguntas que afetam a implementação
-
-1. **raw_trades.csv**: você fornece agora, ou crio um schema + fixture mínima para destravar o pipeline?
-2. **Parquet**: bun não lê parquet nativamente. OK começar com CSV+hash e migrar depois, ou quer dependência parquet (`parquetjs`/`hyparquet`) já?
-3. **HMAC secret**: usar `process.env.TITAN_SIGNING_KEY` (você define no `.env`) ou hash puro SHA256 sem assinatura nesta fase?
-
-Aprovando, executo na ordem 1→8 sem tocar em `src/core/`, `src/execution/`, `tests/golden/`.
+Cada fase recebe auditoria isolada.

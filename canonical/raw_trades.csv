@@ -1,6 +1,0 @@
-id,date,slot,dir,setupType,ep,state,payout,note
-T0001,2024-01-02,T1,1,C1,128500,2/1,270,bootstrap-fixture
-T0002,2024-01-02,T2,-1,norm,128620,STOP,-350,bootstrap-fixture
-T0003,2024-01-03,T1,1,open,129100,0/0,135,bootstrap-fixture
-T0004,2024-01-04,T1,-1,C1,129050,1/1,200,bootstrap-fixture
-T0005,2024-01-05,T1,1,norm,129300,STOP,-350,bootstrap-fixture

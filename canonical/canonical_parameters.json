@@ -1,9 +1,0 @@
-{
-  "version": 1,
-  "filters": {
-    "dateFrom": null,
-    "dateTo": null,
-    "excludeStates": []
-  },
-  "bucketGranularity": "day"
-}
