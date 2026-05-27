@@ -10,8 +10,8 @@
     },
     {
       "path": "canonical/canonical_metrics.json",
-      "sha256": "83d032c0df2a20827a1d08371e0ccc2db7fd3c27850ef5984899edf4a48b00b9",
-      "bytes": 5258,
+      "sha256": "36686c22f0a4287598f618837ba5fb5552ca8cf9354312925289e437f90e980b",
+      "bytes": 5010,
       "kind": "canonical"
     },
     {
@@ -22,8 +22,8 @@
     },
     {
       "path": "canonical/canonical_metadata.json",
-      "sha256": "e57166ba713c0fb0a8aa1816ed312771d4547909b2cc5602457965051086f031",
-      "bytes": 385,
+      "sha256": "f16cb233f71c4ca630788adb90f9950b92cce958fd28a7895a1277d9e52946e5",
+      "bytes": 316,
       "kind": "canonical"
     },
     {
