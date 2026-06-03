@@ -61,6 +61,13 @@ export interface PrevDay {
   fechamento: number;
   abertura: number;
   ajuste: number;
+  /**
+   * VWAP diária do dia anterior (NTSL A_F_M_M_A_V — Plot6).
+   * OPCIONAL e ADDITIVE: quando ausente, barrier.ts mantém comportamento
+   * parity-locked original. Quando presente, entra como candidato de
+   * barreira (metadata; barreira não bloqueia entrada).
+   */
+  vwap?: number;
 }
 
 export interface DayData {

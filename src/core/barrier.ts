@@ -28,7 +28,10 @@ export function checkBarrier(
     prev.fechamento,
     prev.abertura,
     prev.ajuste,
-  ].filter((v) => v && v > 0);
+    // VWAP D-1 — opcional (NTSL A_F_M_M_A_V). Backward compatible:
+    // fixtures/golden sem vwap mantêm comportamento parity-locked.
+    prev.vwap,
+  ].filter((v): v is number => typeof v === "number" && v > 0);
 
   if (!bars.length) return { ok: true, dist: CLEAR_DIST };
 
